@@ -33,9 +33,15 @@ local function factory(args)
     local followtag     = args.followtag or false
     local settings      = args.settings or function() end
 
-    local mpdh = string.format("telnet://%s:%s", host, port)
     local echo = string.format("printf \"%sstatus\\ncurrentsong\\nclose\\n\"", password)
-    local cmd  = string.format("%s | curl --connect-timeout 1 -fsm 3 %s", echo, mpdh)
+
+    if string.sub(host, 1, 1) == "/" then
+        mpdh = string.format("UNIX-CONNECT:%s", host)
+        cmd = string.format("%s | socat - %s", echo, mpdh)
+    else
+        mpdh = string.format("telnet://%s:%s", host, port)
+        cmd = string.format("%s | curl --connect-timeout 1 -fsm 3 %s", echo, mpdh)
+    end
 
     mpd_notification_preset = { title = "Now playing", timeout = 6 }
 
